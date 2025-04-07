@@ -9,40 +9,44 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #2d3748;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+/* Button hover effects */
+button {
+  transition: all 0.2s ease-in-out;
 }
 
-/* Animation for notifications */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+button:hover {
+  transform: translateY(-2px);
+  filter: brightness(110%);
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.3s ease-out forwards;
+button:active {
+  transform: translateY(1px);
 }
 
-/* Animation for news ticker */
-@keyframes tickerScroll {
-  0% {
-    transform: translateX(100%);
-  }
-  100% {
-    transform: translateX(-100%);
-  }
+/* Animations */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-.news-text {
-  display: inline-block;
-  white-space: nowrap;
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out forwards;
+}
+
+.animate-pulse {
+  animation: pulse 1.5s infinite;
+}
+
+/* Toggle switch animation */
+.transition-transform {
+  transition: transform 0.2s ease-in-out;
 }
