@@ -580,6 +580,16 @@ const PortfolioPanicGame = () => {
     }
   }, [showConfetti]);
 
+  // Clean up all timers on unmount
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      if (roundTimerRef.current) clearInterval(roundTimerRef.current);
+      if (notificationTimerRef.current) clearTimeout(notificationTimerRef.current);
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
+    };
+  }, []);
+
   // Render game UI
   return (
     <div className={`portfolio-panic-game ${theme === 'dark' ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'} min-h-screen p-4 relative overflow-hidden`}>
@@ -628,6 +638,7 @@ const PortfolioPanicGame = () => {
           <button 
             onClick={toggleTheme} 
             className={`p-2 rounded-full ${theme === 'dark' ? 'bg-yellow-500' : 'bg-gray-700 text-white'}`}
+            aria-label="Toggle theme"
           >
             {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
           </button>
@@ -635,6 +646,7 @@ const PortfolioPanicGame = () => {
           <button 
             onClick={() => setShowSettings(!showSettings)} 
             className={`p-2 rounded-full ${showSettings ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+            aria-label="Settings"
           >
             <Settings size={20} />
           </button>
@@ -642,6 +654,7 @@ const PortfolioPanicGame = () => {
           <button 
             onClick={() => setShowTutorial(true)} 
             className="p-2 rounded-full bg-purple-500 text-white"
+            aria-label="Tutorial"
           >
             <HelpCircle size={20} />
           </button>
@@ -754,12 +767,35 @@ const PortfolioPanicGame = () => {
                   onClick={() => adjustPortfolio(asset, -5)}
                   className="btn-adjust bg-red-500 text-white w-12 h-8 rounded-lg flex items-center justify-center hover:bg-red-600 transition-colors"
                   disabled={timeLeft === 0}
+                  aria-label={`Decrease ${asset} allocation`}
                 >
                   <ChevronDown size={16} />
                 </button>
+                
+                <div className="progress-bar h-8 flex-1 mx-2 bg-gray-200 rounded-lg overflow-hidden">
+                  <div 
+                    className={`h-full ${
+                      asset === 'stocks' ? 'bg-blue-500' : 
+                      asset === 'bonds' ? 'bg-purple-500' : 
+                      asset === 'gold' ? 'bg-yellow-500' : 
+                      asset === 'crypto' ? 'bg-indigo-500' : 
+                      'bg-green-500'
+                    }`}
+                    style={{ width: `${allocation}%` }}
+                  />
+                </div>
+                
+                <button 
+                  onClick={() => adjustPortfolio(asset, 5)}
+                  className="btn-adjust bg-green-500 text-white w-12 h-8 rounded-lg flex items-center justify-center hover:bg-green-600 transition-colors"
+                  disabled={timeLeft === 0}
+                  aria-label={`Increase ${asset} allocation`}
+                >
+                  <ChevronUp size={16} />
+                </button>
               </div>
             </div>
-          </div>
+          ))}
         </div>
       )}
       
@@ -769,7 +805,11 @@ const PortfolioPanicGame = () => {
           <div className={`achievements-content p-6 rounded-lg max-w-2xl w-full ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold">Achievements</h2>
-              <button onClick={() => setShowAchievements(false)} className="text-gray-500 hover:text-gray-700">
+              <button 
+                onClick={() => setShowAchievements(false)} 
+                className="text-gray-500 hover:text-gray-700"
+                aria-label="Close achievements"
+              >
                 <X size={24} />
               </button>
             </div>
@@ -881,7 +921,11 @@ const PortfolioPanicGame = () => {
           <div className={`leaderboard-content p-6 rounded-lg max-w-2xl w-full ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold">Leaderboard</h2>
-              <button onClick={() => setShowLeaderboard(false)} className="text-gray-500 hover:text-gray-700">
+              <button 
+                onClick={() => setShowLeaderboard(false)} 
+                className="text-gray-500 hover:text-gray-700"
+                aria-label="Close leaderboard"
+              >
                 <X size={24} />
               </button>
             </div>
@@ -965,6 +1009,7 @@ const PortfolioPanicGame = () => {
               notification.type === 'levelup' ? 'bg-purple-500 text-white' : 
               'bg-green-500 text-white'
             }`}
+            role="alert"
           >
             <div className="flex items-center">
               {notification.type === 'info' && <MessageCircle className="mr-2" size={16} />}
@@ -975,37 +1020,6 @@ const PortfolioPanicGame = () => {
           </div>
         ))}
       </div>
-    </div>
-  );
-};
-
-export default PortfolioPanicGame;
-                
-                <div className="progress-bar h-8 flex-1 mx-2 bg-gray-200 rounded-lg overflow-hidden">
-                  <div 
-                    className={`h-full ${
-                      asset === 'stocks' ? 'bg-blue-500' : 
-                      asset === 'bonds' ? 'bg-purple-500' : 
-                      asset === 'gold' ? 'bg-yellow-500' : 
-                      asset === 'crypto' ? 'bg-indigo-500' : 
-                      'bg-green-500'
-                    }`}
-                    style={{ width: `${allocation}%` }}
-                  />
-                </div>
-                
-                <button 
-                  onClick={() => adjustPortfolio(asset, 5)}
-                  className="btn-adjust bg-green-500 text-white w-12 h-8 rounded-lg flex items-center justify-center hover:bg-green-600 transition-colors"
-                  disabled={timeLeft === 0}
-                >
-                  <ChevronUp size={16} />
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
       
       {/* Round results */}
       {gameActive && showResults && (
@@ -1096,6 +1110,7 @@ export default PortfolioPanicGame;
                 value={difficulty}
                 onChange={(e) => setDifficulty(e.target.value)}
                 className={`p-2 rounded border ${theme === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}
+                aria-label="Select difficulty"
               >
                 <option value="easy">Easy</option>
                 <option value="normal">Normal</option>
@@ -1109,6 +1124,7 @@ export default PortfolioPanicGame;
                 value={gameMode}
                 onChange={(e) => setGameMode(e.target.value)}
                 className={`p-2 rounded border ${theme === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}
+                aria-label="Select game mode"
               >
                 <option value="classic">Classic</option>
                 <option value="career">Career</option>
@@ -1121,6 +1137,7 @@ export default PortfolioPanicGame;
             <button 
               onClick={togglePause}
               className={`btn-pause py-2 px-6 ${paused ? 'bg-green-500' : 'bg-yellow-500'} text-white rounded-lg font-bold flex items-center hover:opacity-90 transition-opacity`}
+              aria-label={paused ? "Resume game" : "Pause game"}
             >
               {paused ? <Play className="mr-1" /> : <Pause className="mr-1" />}
               {paused ? 'Resume' : 'Pause'}
@@ -1129,6 +1146,7 @@ export default PortfolioPanicGame;
             <button 
               onClick={resetGame}
               className="btn-reset py-2 px-6 bg-red-500 text-white rounded-lg font-bold flex items-center hover:bg-red-600 transition-colors"
+              aria-label="Reset game"
             >
               <RefreshCcw className="mr-1" /> Reset
             </button>
@@ -1146,6 +1164,8 @@ export default PortfolioPanicGame;
               (theme === 'dark' ? 'bg-gray-600' : 'bg-gray-200') : 
               (theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100')
             }`}
+            aria-expanded={showMarketInsights}
+            aria-controls="market-insights-panel"
           >
             {showMarketInsights ? 'Hide Market Insights ▲' : 'Show Market Insights ▼'}
           </button>
@@ -1153,7 +1173,10 @@ export default PortfolioPanicGame;
       )}
       
       {gameActive && showMarketInsights && (
-        <div className={`market-insights p-4 rounded-lg mb-8 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`}>
+        <div 
+          id="market-insights-panel"
+          className={`market-insights p-4 rounded-lg mb-8 ${theme === 'dark' ? 'bg-gray-700' : 'bg-gray-100'}`}
+        >
           <h3 className="text-lg font-bold mb-4">Market Insights</h3>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1221,19 +1244,37 @@ export default PortfolioPanicGame;
           <p className="mb-6">React to financial news and adjust your portfolio to maximize returns. Can you beat the market?</p>
           
           <div className="game-modes grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-            <div className={`mode-card p-4 rounded-lg cursor-pointer ${gameMode === 'classic' ? 'ring-2 ring-blue-500' : ''} ${theme === 'dark' ? 'bg-gray-600' : 'bg-gray-100'}`} onClick={() => setGameMode('classic')}>
+            <div 
+              className={`mode-card p-4 rounded-lg cursor-pointer ${gameMode === 'classic' ? 'ring-2 ring-blue-500' : ''} ${theme === 'dark' ? 'bg-gray-600' : 'bg-gray-100'}`} 
+              onClick={() => setGameMode('classic')}
+              role="radio"
+              aria-checked={gameMode === 'classic'}
+              tabIndex={0}
+            >
               <h3 className="text-lg font-bold mb-2">Classic Mode</h3>
               <TrendingUp size={32} className="mx-auto mb-2 text-blue-500" />
               <p className="text-sm">Standard gameplay with random financial news events.</p>
             </div>
             
-            <div className={`mode-card p-4 rounded-lg cursor-pointer ${gameMode === 'career' ? 'ring-2 ring-purple-500' : ''} ${theme === 'dark' ? 'bg-gray-600' : 'bg-gray-100'}`} onClick={() => setGameMode('career')}>
+            <div 
+              className={`mode-card p-4 rounded-lg cursor-pointer ${gameMode === 'career' ? 'ring-2 ring-purple-500' : ''} ${theme === 'dark' ? 'bg-gray-600' : 'bg-gray-100'}`} 
+              onClick={() => setGameMode('career')}
+              role="radio"
+              aria-checked={gameMode === 'career'}
+              tabIndex={0}
+            >
               <h3 className="text-lg font-bold mb-2">Career Mode</h3>
               <Target size={32} className="mx-auto mb-2 text-purple-500" />
               <p className="text-sm">Progress through levels with increasing difficulty and complexity.</p>
             </div>
             
-            <div className={`mode-card p-4 rounded-lg cursor-pointer ${gameMode === 'crisis' ? 'ring-2 ring-red-500' : ''} ${theme === 'dark' ? 'bg-gray-600' : 'bg-gray-100'}`} onClick={() => setGameMode('crisis')}>
+            <div 
+              className={`mode-card p-4 rounded-lg cursor-pointer ${gameMode === 'crisis' ? 'ring-2 ring-red-500' : ''} ${theme === 'dark' ? 'bg-gray-600' : 'bg-gray-100'}`} 
+              onClick={() => setGameMode('crisis')}
+              role="radio"
+              aria-checked={gameMode === 'crisis'}
+              tabIndex={0}
+            >
               <h3 className="text-lg font-bold mb-2">Crisis Mode</h3>
               <AlertCircle size={32} className="mx-auto mb-2 text-red-500" />
               <p className="text-sm">Survive a market crash! Intense gameplay with challenging events.</p>
@@ -1347,7 +1388,11 @@ export default PortfolioPanicGame;
           <div className={`settings-content p-6 rounded-lg max-w-md w-full ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold">Settings</h2>
-              <button onClick={() => setShowSettings(false)} className="text-gray-500 hover:text-gray-700">
+              <button 
+                onClick={() => setShowSettings(false)} 
+                className="text-gray-500 hover:text-gray-700"
+                aria-label="Close settings"
+              >
                 <X size={24} />
               </button>
             </div>
@@ -1362,6 +1407,7 @@ export default PortfolioPanicGame;
                   <button 
                     onClick={toggleTheme} 
                     className={`p-2 rounded-full ${theme === 'dark' ? 'bg-yellow-500' : 'bg-gray-700 text-white'}`}
+                    aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} theme`}
                   >
                     {theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
                   </button>
@@ -1377,6 +1423,8 @@ export default PortfolioPanicGame;
                   <button 
                     onClick={() => setSfxEnabled(!sfxEnabled)} 
                     className={`p-2 rounded-full ${sfxEnabled ? 'bg-green-500 text-white' : 'bg-gray-300'}`}
+                    aria-label={`${sfxEnabled ? 'Disable' : 'Enable'} sound effects`}
+                    aria-pressed={sfxEnabled}
                   >
                     {sfxEnabled ? <Check size={16} /> : <X size={16} />}
                   </button>
@@ -1392,6 +1440,8 @@ export default PortfolioPanicGame;
                   <button 
                     onClick={() => setMusicEnabled(!musicEnabled)} 
                     className={`p-2 rounded-full ${musicEnabled ? 'bg-green-500 text-white' : 'bg-gray-300'}`}
+                    aria-label={`${musicEnabled ? 'Disable' : 'Enable'} background music`}
+                    aria-pressed={musicEnabled}
                   >
                     {musicEnabled ? <Check size={16} /> : <X size={16} />}
                   </button>
@@ -1407,6 +1457,7 @@ export default PortfolioPanicGame;
                   value={difficulty}
                   onChange={(e) => setDifficulty(e.target.value)}
                   className={`p-2 rounded border w-full ${theme === 'dark' ? 'bg-gray-700 border-gray-600' : 'bg-white border-gray-300'}`}
+                  aria-label="Select difficulty"
                 >
                   <option value="easy">Easy</option>
                   <option value="normal">Normal</option>
@@ -1424,7 +1475,11 @@ export default PortfolioPanicGame;
           <div className={`tutorial-content p-6 rounded-lg max-w-2xl w-full ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold">{tutorialSteps[tutorialStep].title}</h2>
-              <button onClick={() => setShowTutorial(false)} className="text-gray-500 hover:text-gray-700">
+              <button 
+                onClick={() => setShowTutorial(false)} 
+                className="text-gray-500 hover:text-gray-700"
+                aria-label="Close tutorial"
+              >
                 <X size={24} />
               </button>
             </div>
@@ -1449,17 +1504,21 @@ export default PortfolioPanicGame;
                     tutorialStep > 0 ? 'bg-blue-500 text-white' : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
                   disabled={tutorialStep === 0}
+                  aria-label="Previous tutorial step"
                 >
                   <ChevronLeft className="mr-1" /> Previous
                 </button>
                 
-                <div className="step-indicators flex space-x-1">
+                <div className="step-indicators flex space-x-1" role="tablist" aria-label="Tutorial progress">
                   {tutorialSteps.map((_, idx) => (
                     <div 
                       key={idx} 
                       className={`w-2 h-2 rounded-full ${
                         idx === tutorialStep ? 'bg-blue-500' : 'bg-gray-300'
                       }`}
+                      role="tab"
+                      aria-selected={idx === tutorialStep}
+                      aria-label={`Step ${idx + 1}`}
                     />
                   ))}
                 </div>
@@ -1467,6 +1526,17 @@ export default PortfolioPanicGame;
                 <button 
                   onClick={tutorialStep < tutorialSteps.length - 1 ? nextTutorialStep : () => setShowTutorial(false)}
                   className="py-2 px-4 bg-blue-500 text-white rounded-lg flex items-center"
+                  aria-label={tutorialStep < tutorialSteps.length - 1 ? "Next tutorial step" : "Start playing"}
                 >
                   {tutorialStep < tutorialSteps.length - 1 ? 'Next' : 'Start Playing'} <ChevronRight className="ml-1" />
                 </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default PortfolioPanicGame;
