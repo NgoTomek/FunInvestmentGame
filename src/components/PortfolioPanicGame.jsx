@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Coins, ArrowUp, ArrowDown, AlertCircle, Clock, DollarSign, Award, RefreshCcw, Play, Pause, TrendingUp, TrendingDown, BarChart2, Briefcase, Zap, Activity, Gift, Check, X, MessageCircle, ChevronRight, ChevronLeft, Sun, Moon, FileText, Settings, ChevronDown, Bell, HelpCircle, Target } from 'lucide-react';
+import { Coins, ArrowUp, ArrowDown, AlertCircle, Clock, DollarSign, Award, RefreshCcw, Play, Pause, TrendingUp, TrendingDown, BarChart2, Briefcase, Zap, Activity, Gift, Check, X, MessageCircle, ChevronRight, ChevronLeft, Sun, Moon, FileText, Settings, ChevronDown, ChevronUp, Bell, HelpCircle, Target } from 'lucide-react';
 
 const PortfolioPanicGame = () => {
   // Game states
@@ -767,7 +767,6 @@ const PortfolioPanicGame = () => {
                   onClick={() => adjustPortfolio(asset, -5)}
                   className="btn-adjust bg-red-500 text-white w-12 h-8 rounded-lg flex items-center justify-center hover:bg-red-600 transition-colors"
                   disabled={timeLeft === 0}
-                  aria-label={`Decrease ${asset} allocation`}
                 >
                   <ChevronDown size={16} />
                 </button>
@@ -789,7 +788,6 @@ const PortfolioPanicGame = () => {
                   onClick={() => adjustPortfolio(asset, 5)}
                   className="btn-adjust bg-green-500 text-white w-12 h-8 rounded-lg flex items-center justify-center hover:bg-green-600 transition-colors"
                   disabled={timeLeft === 0}
-                  aria-label={`Increase ${asset} allocation`}
                 >
                   <ChevronUp size={16} />
                 </button>
