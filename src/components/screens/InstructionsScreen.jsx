@@ -1,22 +1,25 @@
 import React from 'react';
-import { ArrowLeft, ArrowUp, ArrowDown, Zap, DollarSign, BarChart, TrendingUp, TrendingDown, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, ArrowUp, ArrowDown, Zap, DollarSign, BarChart, TrendingUp, TrendingDown, AlertTriangle, BookOpen, CheckSquare } from 'lucide-react';
 
 const InstructionsScreen = ({ setGameScreen }) => {
   return (
-    <div className="h-screen flex flex-col items-center justify-center bg-teal-600 p-4">
-      <div className="bg-gray-800 text-white p-8 rounded-lg w-full max-w-2xl mb-8 overflow-y-auto max-h-[80vh]">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-teal-600 to-teal-800 p-4">
+      <div className="bg-gray-800 text-white p-6 rounded-lg w-full max-w-2xl mb-8 overflow-y-auto max-h-[80vh] shadow-lg border border-gray-700">
         <div className="flex items-center mb-6">
           <button 
             onClick={() => setGameScreen('menu')}
-            className="bg-gray-700 text-white p-2 rounded-lg mr-3 hover:bg-gray-600"
+            className="bg-gray-700 text-white p-2 rounded-lg mr-3 hover:bg-gray-600 transition-colors"
           >
             <ArrowLeft size={20} />
           </button>
-          <h2 className="text-4xl font-bold text-center flex-1">HOW TO PLAY</h2>
+          <h2 className="text-4xl font-bold text-center flex-1 flex items-center justify-center">
+            <BookOpen className="mr-3 text-blue-400" size={28} />
+            HOW TO PLAY
+          </h2>
         </div>
         
         {/* Game Objective */}
-        <div className="mb-8">
+        <div className="mb-8 bg-gray-700 p-4 rounded-lg border-l-4 border-blue-500">
           <h3 className="text-2xl font-bold mb-3">Game Objective</h3>
           <p className="mb-3">
             In Portfolio Panic, your goal is to maximize your investment returns by trading 
@@ -30,8 +33,11 @@ const InstructionsScreen = ({ setGameScreen }) => {
         
         {/* Game Flow */}
         <div className="mb-8">
-          <h3 className="text-2xl font-bold mb-3">Game Flow</h3>
-          <ol className="list-decimal pl-5 space-y-2">
+          <h3 className="text-2xl font-bold mb-3 flex items-center">
+            <BarChart className="mr-2 text-green-400" size={24} />
+            Game Flow
+          </h3>
+          <ol className="list-decimal pl-5 space-y-2 bg-gray-700 p-4 rounded-lg">
             <li>The game consists of several rounds (depending on difficulty)</li>
             <li>Each round lasts 60 seconds</li>
             <li>Market prices update every 8-12 seconds (based on difficulty)</li>
@@ -42,9 +48,12 @@ const InstructionsScreen = ({ setGameScreen }) => {
         
         {/* Trading System */}
         <div className="mb-8">
-          <h3 className="text-2xl font-bold mb-3">Trading System</h3>
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="bg-gray-700 p-4 rounded-lg">
+          <h3 className="text-2xl font-bold mb-3 flex items-center">
+            <DollarSign className="mr-2 text-yellow-400" size={24} />
+            Trading System
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div className="bg-gray-700 p-4 rounded-lg hover:bg-gray-600 transition-colors">
               <h4 className="flex items-center text-xl font-bold mb-2">
                 <DollarSign className="mr-2 text-green-500" size={20} />
                 Buying Assets
@@ -54,7 +63,7 @@ const InstructionsScreen = ({ setGameScreen }) => {
                 you want to buy. You can't buy more than your available cash allows.
               </p>
             </div>
-            <div className="bg-gray-700 p-4 rounded-lg">
+            <div className="bg-gray-700 p-4 rounded-lg hover:bg-gray-600 transition-colors">
               <h4 className="flex items-center text-xl font-bold mb-2">
                 <DollarSign className="mr-2 text-red-500" size={20} />
                 Selling Assets
@@ -65,25 +74,28 @@ const InstructionsScreen = ({ setGameScreen }) => {
               </p>
             </div>
           </div>
-          <div className="bg-gray-700 p-4 rounded-lg">
+          <div className="bg-gray-700 p-4 rounded-lg hover:bg-gray-600 transition-colors">
             <h4 className="flex items-center text-xl font-bold mb-2">
               <BarChart className="mr-2 text-blue-500" size={20} />
-              Hold Strategies
+              Short Selling
             </h4>
             <p className="text-sm mb-2">
-              Click the HOLD button to set automated trading strategies:
+              Advanced traders can also "short" assets they believe will decrease in price:
             </p>
             <ul className="list-disc pl-5 text-sm">
-              <li>Sell when price increases by a percentage</li>
-              <li>Sell when price decreases by a percentage</li>
-              <li>Hold for a specific number of rounds</li>
+              <li>When you short an asset, you profit if the price goes down</li>
+              <li>Short positions have higher risk and higher potential reward</li>
+              <li>You can close a short position at any time to lock in profits or cut losses</li>
             </ul>
           </div>
         </div>
         
         {/* Market Indicators */}
         <div className="mb-8">
-          <h3 className="text-2xl font-bold mb-3">Market Indicators</h3>
+          <h3 className="text-2xl font-bold mb-3 flex items-center">
+            <TrendingUp className="mr-2 text-blue-400" size={24} />
+            Market Indicators
+          </h3>
           <p className="mb-3">
             Pay attention to these indicators to make informed trading decisions:
           </p>
@@ -140,23 +152,43 @@ const InstructionsScreen = ({ setGameScreen }) => {
         </div>
         
         {/* Tips for Success */}
-        <div className="mb-4">
-          <h3 className="text-2xl font-bold mb-3">Tips for Success</h3>
-          <ul className="list-disc pl-5 space-y-2">
-            <li>Diversify your portfolio to reduce risk</li>
-            <li>Gold often performs well during market uncertainty</li>
-            <li>Cryptocurrency is highly volatile but can yield big returns</li>
-            <li>Bonds provide stability but lower returns</li>
-            <li>Watch for trends and react quickly to market news</li>
-            <li>Don't put all your money in one asset</li>
-            <li>Set hold strategies to automate your trading plan</li>
+        <div className="mb-4 bg-blue-900 bg-opacity-30 p-4 rounded-lg border border-blue-800">
+          <h3 className="text-2xl font-bold mb-3 flex items-center">
+            <CheckSquare className="mr-2 text-blue-400" size={24} />
+            Tips for Success
+          </h3>
+          <ul className="space-y-2">
+            <li className="flex items-start">
+              <Zap size={16} className="text-yellow-400 mr-2 mt-1" />
+              <span>Diversify your portfolio to reduce risk</span>
+            </li>
+            <li className="flex items-start">
+              <Zap size={16} className="text-yellow-400 mr-2 mt-1" />
+              <span>Gold often performs well during market uncertainty</span>
+            </li>
+            <li className="flex items-start">
+              <Zap size={16} className="text-yellow-400 mr-2 mt-1" />
+              <span>Cryptocurrency is highly volatile but can yield big returns</span>
+            </li>
+            <li className="flex items-start">
+              <Zap size={16} className="text-yellow-400 mr-2 mt-1" />
+              <span>Watch for trends and react quickly to market news</span>
+            </li>
+            <li className="flex items-start">
+              <Zap size={16} className="text-yellow-400 mr-2 mt-1" />
+              <span>Don't put all your money in one asset</span>
+            </li>
+            <li className="flex items-start">
+              <Zap size={16} className="text-yellow-400 mr-2 mt-1" />
+              <span>Buy low, sell high, and don't panic during crashes</span>
+            </li>
           </ul>
         </div>
       </div>
       
       <button 
         onClick={() => setGameScreen('menu')}
-        className="bg-gray-800 text-white py-3 px-8 rounded-lg text-xl font-bold hover:bg-gray-700 transition transform hover:-translate-y-1"
+        className="bg-gray-800 text-white py-3 px-8 rounded-lg text-xl font-bold hover:bg-gray-700 transition transform hover:-translate-y-1 shadow-lg"
       >
         BACK TO MENU
       </button>
