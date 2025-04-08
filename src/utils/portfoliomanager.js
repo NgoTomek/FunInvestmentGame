@@ -1,4 +1,4 @@
- /**
+/**
  * Portfolio management utility functions
  */
 
