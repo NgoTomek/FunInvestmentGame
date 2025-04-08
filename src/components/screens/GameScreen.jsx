@@ -10,7 +10,7 @@ import { generateNewsEvent, updateMarketPrices } from '../../utils/marketLogic';
 
 const GameScreen = ({ 
   portfolio, assetPrices, setAssetPrices, assetQuantities, setAssetQuantities,
-  assetTrends, setAssetTrends, priceHistory, setPriceHistory, timer, setTimer,
+  assetTrends, setAssetTrends, assetVolatility, setAssetVolatility, priceHistory, setPriceHistory, timer, setTimer,
   marketUpdateCountdown, setMarketUpdateCountdown, round, setRound,
   totalRounds, paused, setPaused, currentNews, setCurrentNews, showNewsPopup,
   setShowNewsPopup, newsPopup, setNewsPopup, showMarketAlert, setShowMarketAlert,

@@ -489,6 +489,8 @@ const PortfolioPanicGame = () => {
           setAssetQuantities={setAssetQuantities}
           assetTrends={assetTrends}
           setAssetTrends={setAssetTrends}
+          assetVolatility={assetVolatility}
+          setAssetVolatility={setAssetVolatility}
           priceHistory={priceHistory}
           setPriceHistory={setPriceHistory}
           timer={timer}
