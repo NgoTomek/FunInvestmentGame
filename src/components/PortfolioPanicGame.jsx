@@ -8,6 +8,7 @@ import AchievementsScreen from './screens/AchievementsScreen';
 import AssetInfoScreen from './screens/AssetInfoScreen';
 import { loadGameState, saveGameState } from '../utils/localStorage';
 import { DIFFICULTY_SETTINGS, GAME_MODE_SETTINGS, INITIAL_ASSET_PRICES } from '../utils/gameData';
+import { calculatePortfolioValue } from '../utils/portfoliomanager';
 
 const PortfolioPanicGame = () => {
   // Game state management
@@ -18,56 +19,48 @@ const PortfolioPanicGame = () => {
   // Portfolio state
   const [portfolio, setPortfolio] = useState({
     cash: 10000,
-    stocks: 0,
-    gold: 0,
-    crypto: 0,
-    bonds: 0
   });
   
   // Market state
-  const [assetPrices, setAssetPrices] = useState(INITIAL_ASSET_PRICES);
-  const [assetQuantities, setAssetQuantities] = useState({
-    stocks: 0,
-    gold: 0,
-    crypto: 0,
-    bonds: 0
+  const [assetPrices, setAssetPrices] = useState({
+    stocks: 120,
+    oil: 65,
+    gold: 1950,
+    crypto: 29000
   });
-  const [assetTrends, setAssetTrends] = useState({
-    stocks: { direction: 'up', strength: 2 },
-    gold: { direction: 'up', strength: 1 },
-    crypto: { direction: 'down', strength: 2 },
-    bonds: { direction: 'down', strength: 1 }
-  });
-  const [assetVolatility, setAssetVolatility] = useState({
-    stocks: 0.08,
-    gold: 0.05,
-    crypto: 0.15,
-    bonds: 0.03
-  });
-  const [priceHistory, setPriceHistory] = useState({
-    stocks: [230, 235, 240],
-    gold: [1830, 1840, 1850],
-    crypto: [30000, 29500, 29200],
-    bonds: [1000, 990, 980]
+  
+  // New asset data structure for fractional investments and shorts
+  const [assetData, setAssetData] = useState({
+    quantities: {
+      stocks: 0,
+      oil: 0,
+      gold: 0,
+      crypto: 0
+    },
+    dollarValues: {
+      stocks: 0,
+      oil: 0,
+      gold: 0,
+      crypto: 0
+    },
+    shorts: {
+      stocks: { value: 0, price: 0, active: false },
+      oil: { value: 0, price: 0, active: false },
+      gold: { value: 0, price: 0, active: false },
+      crypto: { value: 0, price: 0, active: false }
+    }
   });
   
   // Game progression
   const [timer, setTimer] = useState(60);
-  const [marketUpdateCountdown, setMarketUpdateCountdown] = useState(10);
   const [paused, setPaused] = useState(false);
   const [round, setRound] = useState(1);
   const [totalRounds, setTotalRounds] = useState(5);
   
   // News system
   const [currentNews, setCurrentNews] = useState({
-    message: "New smartphone model is a hit!",
-    impact: { stocks: 1.05, gold: 0.98, crypto: 1.02, bonds: 0.99 }
-  });
-  const [showNewsPopup, setShowNewsPopup] = useState(false);
-  const [newsPopup, setNewsPopup] = useState({
-    title: "COMPANY X REPORTS STRONG EARNINGS!",
-    message: "The stock price of Company X jumps after they announce better-than-expected quarterly earnings.",
-    tip: "Positive news will usually cause a stock to rise."
+    message: "SEC cracks down on crypto exchanges",
+    impact: { stocks: 1.01, oil: 1.0, gold: 1.03, crypto: 0.75 }
   });
   
   // User settings
@@ -79,11 +72,13 @@ const PortfolioPanicGame = () => {
     saveProgress: true
   });
   
-  // Market alert system
-  const [showMarketAlert, setShowMarketAlert] = useState(false);
-  const [marketAlert, setMarketAlert] = useState({
-    title: "MARKET VOLATILITY INCREASING",
-    message: "Economic uncertainty is causing increased market volatility."
+  // Game statistics
+  const [gameStats, setGameStats] = useState({
+    tradesExecuted: 0,
+    profitableTrades: 0,
+    biggestGain: 0,
+    biggestLoss: 0,
+    marketCrashesWeathered: 0
   });
   
   // Game results
@@ -94,9 +89,6 @@ const PortfolioPanicGame = () => {
     worstAsset: ""
   });
   
-  // UI state
-  const [selectedTab, setSelectedTab] = useState('portfolio'); // portfolio, market, analysis
-  
   // Achievements
   const [achievements, setAchievements] = useState({
     firstProfit: { unlocked: false, title: "First Profit", description: "Make your first profitable trade" },
@@ -105,20 +97,14 @@ const PortfolioPanicGame = () => {
     goldHoarder: { unlocked: false, title: "Gold Hoarder", description: "Accumulate 5 units of gold" },
     marketCrash: { unlocked: false, title: "Crash Survivor", description: "End with profit despite a market crash" },
     tenPercent: { unlocked: false, title: "Double Digits", description: "Achieve a 10% return" },
-    wealthyInvestor: { unlocked: false, title: "Wealthy Investor", description: "Reach a portfolio value of $15,000" }
+    wealthyInvestor: { unlocked: false, title: "Wealthy Investor", description: "Reach a portfolio value of $15,000" },
+    shortMaster: { unlocked: false, title: "Short Master", description: "Make profit from a short position" },
+    doubleDown: { unlocked: false, title: "Double or Nothing", description: "Win a double or nothing bet" },
+    perfectTiming: { unlocked: false, title: "Perfect Timing", description: "Buy right before a price spike" }
   });
   
   // Notifications
   const [notifications, setNotifications] = useState([]);
-  
-  // Game statistics
-  const [gameStats, setGameStats] = useState({
-    tradesExecuted: 0,
-    profitableTrades: 0,
-    biggestGain: 0,
-    biggestLoss: 0,
-    marketCrashesWeathered: 0
-  });
   
   // Load saved game state on initial render
   useEffect(() => {
@@ -147,76 +133,40 @@ const PortfolioPanicGame = () => {
     }
   }, [settings, achievements, gameScreen]);
   
-  // Calculate total portfolio value
-  const calculatePortfolioValue = () => {
-    return portfolio.cash + 
-      (assetQuantities.stocks * assetPrices.stocks) +
-      (assetQuantities.gold * assetPrices.gold) +
-      (assetQuantities.crypto * assetPrices.crypto) +
-      (assetQuantities.bonds * assetPrices.bonds);
-  };
-  
   // Initialize game based on difficulty and mode
   const initializeGame = () => {
     // Set starting cash based on difficulty
     const cash = DIFFICULTY_SETTINGS[difficulty].startingCash;
-    setPortfolio({ ...portfolio, cash });
+    setPortfolio({ cash });
     
     // Reset asset quantities
-    setAssetQuantities({
-      stocks: 0,
-      gold: 0,
-      crypto: 0,
-      bonds: 0
+    setAssetData({
+      quantities: {
+        stocks: 0,
+        oil: 0,
+        gold: 0,
+        crypto: 0
+      },
+      dollarValues: {
+        stocks: 0,
+        oil: 0,
+        gold: 0,
+        crypto: 0
+      },
+      shorts: {
+        stocks: { value: 0, price: 0, active: false },
+        oil: { value: 0, price: 0, active: false },
+        gold: { value: 0, price: 0, active: false },
+        crypto: { value: 0, price: 0, active: false }
+      }
     });
     
-    // Set market conditions based on game mode
-    const condition = GAME_MODE_SETTINGS[gameMode].marketCondition;
-    
-    // Initialize asset trends based on market condition
-    let initialTrends = {
-      stocks: { direction: 'up', strength: 1 },
-      gold: { direction: 'up', strength: 1 },
-      crypto: { direction: 'up', strength: 1 },
-      bonds: { direction: 'up', strength: 1 }
-    };
-    
-    if (condition === 'bearish') {
-      initialTrends = {
-        stocks: { direction: 'down', strength: 2 },
-        gold: { direction: 'up', strength: 1 },
-        crypto: { direction: 'down', strength: 3 },
-        bonds: { direction: 'down', strength: 1 }
-      };
-    } else if (condition === 'bullish') {
-      initialTrends = {
-        stocks: { direction: 'up', strength: 2 },
-        gold: { direction: 'down', strength: 1 },
-        crypto: { direction: 'up', strength: 3 },
-        bonds: { direction: 'up', strength: 1 }
-      };
-    }
-    
-    setAssetTrends(initialTrends);
-    
-    // Set volatility based on difficulty
-    const volatilityMultiplier = DIFFICULTY_SETTINGS[difficulty].volatilityMultiplier;
-    setAssetVolatility({
-      stocks: 0.08 * volatilityMultiplier,
-      gold: 0.05 * volatilityMultiplier,
-      crypto: 0.15 * volatilityMultiplier,
-      bonds: 0.03 * volatilityMultiplier
-    });
-    
-    // Set initial asset prices
-    setAssetPrices(INITIAL_ASSET_PRICES);
-    
-    // Reset price history
-    setPriceHistory({
-      stocks: [230, 235, 240],
-      gold: [1830, 1840, 1850],
-      crypto: [30000, 29500, 29200],
-      bonds: [1000, 990, 980]
+    // Initialize asset prices
+    setAssetPrices({
+      stocks: 120,
+      oil: 65,
+      gold: 1950,
+      crypto: 29000
     });
     
     // Set rounds based on difficulty
@@ -244,119 +194,23 @@ const PortfolioPanicGame = () => {
     }, 5000);
   };
   
-  // Trading system - enhanced with quantity control
-  const handleTrade = (asset, action, quantity) => {
-    if (action === 'buy') {
-      handleBuy(asset, quantity);
-    } else if (action === 'sell') {
-      handleSell(asset, quantity);
-    }
-    // 'hold' action doesn't need explicit handling (it's just not buying/selling)
-  };
-  
-  // Buy asset handler with quantity control
-  const handleBuy = (asset, quantity) => {
-    // Ensure quantity is a valid number
-    quantity = parseFloat(quantity) || 1;
-    
-    // Calculate total cost
-    const totalCost = assetPrices[asset] * quantity;
-    
-    if (portfolio.cash >= totalCost) {
-      // Update asset quantities
-      setAssetQuantities(prev => ({
-        ...prev,
-        [asset]: prev[asset] + quantity
-      }));
-      
-      // Update cash
-      setPortfolio(prev => ({
-        ...prev,
-        cash: prev.cash - totalCost
-      }));
-      
-      // Record trade in game stats
-      setGameStats(prev => ({
-        ...prev,
-        tradesExecuted: prev.tradesExecuted + 1
-      }));
-      
-      // Show notification
-      addNotification(`Bought ${quantity} ${asset} for ${formatCurrency(totalCost)}`, 'success');
-      
-      // Check achievements
-      checkAchievements();
-    } else {
-      addNotification(`Not enough cash to buy ${quantity} ${asset}`, 'error');
-    }
-  };
-  
-  // Sell asset handler with quantity control
-  const handleSell = (asset, quantity) => {
-    // Ensure quantity is a valid number
-    quantity = parseFloat(quantity) || 1;
-    
-    if (assetQuantities[asset] >= quantity) {
-      const previousValue = calculatePortfolioValue();
-      const saleValue = assetPrices[asset] * quantity;
-      
-      // Update asset quantities
-      setAssetQuantities(prev => ({
-        ...prev,
-        [asset]: prev[asset] - quantity
-      }));
-      
-      // Update cash
-      setPortfolio(prev => ({
-        ...prev,
-        cash: prev.cash + saleValue
-      }));
-      
-      // Calculate if trade was profitable based on original purchase cost
-      // This is simplified, but we'd ideally track cost basis for each asset
-      const newValue = calculatePortfolioValue();
-      const isProfit = newValue > previousValue;
-      
-      // Update game stats
-      setGameStats(prev => {
-        const profit = newValue - previousValue;
-        return {
-          ...prev,
-          tradesExecuted: prev.tradesExecuted + 1,
-          profitableTrades: isProfit ? prev.profitableTrades + 1 : prev.profitableTrades,
-          biggestGain: profit > prev.biggestGain ? profit : prev.biggestGain,
-          biggestLoss: profit < 0 && Math.abs(profit) > Math.abs(prev.biggestLoss) ? profit : prev.biggestLoss
-        };
-      });
-      
-      // Show notification
-      addNotification(`Sold ${quantity} ${asset} for ${formatCurrency(saleValue)}`, 'success');
-      
-      // Check for first profit achievement
-      if (isProfit && !achievements.firstProfit.unlocked) {
-        unlockAchievement('firstProfit');
-      }
-    } else {
-      addNotification(`Not enough ${asset} to sell. You have ${assetQuantities[asset]}`, 'error');
-    }
-  };
-  
   // Check for achievements
   const checkAchievements = () => {
+    const portfolioValue = calculatePortfolioValue(portfolio, assetData, assetPrices);
+    
     // Check for diversified portfolio
-    const hasAllAssets = Object.values(assetQuantities).every(qty => qty > 0);
+    const hasAllAssets = Object.values(assetData.quantities).every(qty => qty > 0);
     if (hasAllAssets && !achievements.diversified.unlocked) {
       unlockAchievement('diversified');
     }
     
-    // Check for gold hoarder
-    if (assetQuantities.gold >= 5 && !achievements.goldHoarder.unlocked) {
+    // Check for gold hoarder (fractional implementation)
+    if (assetData.quantities.gold >= 5 && !achievements.goldHoarder.unlocked) {
       unlockAchievement('goldHoarder');
     }
     
     // Check for risk taker (>50% in crypto)
-    const portfolioValue = calculatePortfolioValue();
-    const cryptoValue = assetQuantities.crypto * assetPrices.crypto;
+    const cryptoValue = assetData.quantities.crypto * assetPrices.crypto;
     if (cryptoValue > portfolioValue * 0.5 && !achievements.riskTaker.unlocked) {
       unlockAchievement('riskTaker');
     }
@@ -391,18 +245,6 @@ const PortfolioPanicGame = () => {
     initializeGame();
     setTimer(60);
     setPaused(false);
-    
-    // Show tutorial if it's the first time
-    if (!settings.tutorialComplete) {
-      setTimeout(() => {
-        setShowNewsPopup(true);
-        setNewsPopup({
-          title: "WELCOME TO PORTFOLIO PANIC!",
-          message: "Buy assets when you expect their price to rise, and sell when you expect them to fall. React to market news to maximize your returns.",
-          tip: "Watch the arrow indicators to see current market trends."
-        });
-      }, 1000);
-    }
   };
   
   // Toggle a setting
@@ -415,7 +257,7 @@ const PortfolioPanicGame = () => {
   
   // Handle end of game
   const handleEndGame = () => {
-    const finalValue = calculatePortfolioValue();
+    const finalValue = calculatePortfolioValue(portfolio, assetData, assetPrices);
     const startingCash = DIFFICULTY_SETTINGS[difficulty].startingCash;
     const returnPercentage = ((finalValue - startingCash) / startingCash) * 100;
     
@@ -425,11 +267,11 @@ const PortfolioPanicGame = () => {
     let bestReturn = -100;
     let worstReturn = 100;
     
-    Object.keys(assetPrices).forEach(asset => {
-      if (assetQuantities[asset] > 0) {
-        const initialPrice = priceHistory[asset][0];
-        const finalPrice = assetPrices[asset];
-        const assetReturn = ((finalPrice - initialPrice) / initialPrice) * 100;
+    Object.entries(assetData.quantities).forEach(([asset, quantity]) => {
+      if (assetData.dollarValues[asset] > 0) {
+        const currentValue = quantity * assetPrices[asset];
+        const originalValue = assetData.dollarValues[asset];
+        const assetReturn = ((currentValue - originalValue) / originalValue) * 100;
         
         if (assetReturn > bestReturn) {
           bestReturn = assetReturn;
@@ -483,20 +325,13 @@ const PortfolioPanicGame = () => {
       {gameScreen === 'game' && (
         <GameScreen 
           portfolio={portfolio}
+          setPortfolio={setPortfolio}
           assetPrices={assetPrices}
           setAssetPrices={setAssetPrices}
-          assetQuantities={assetQuantities}
-          setAssetQuantities={setAssetQuantities}
-          assetTrends={assetTrends}
-          setAssetTrends={setAssetTrends}
-          assetVolatility={assetVolatility}
-          setAssetVolatility={setAssetVolatility}
-          priceHistory={priceHistory}
-          setPriceHistory={setPriceHistory}
+          assetData={assetData}
+          setAssetData={setAssetData}
           timer={timer}
           setTimer={setTimer}
-          marketUpdateCountdown={marketUpdateCountdown}
-          setMarketUpdateCountdown={setMarketUpdateCountdown}
           round={round}
           setRound={setRound}
           totalRounds={totalRounds}
@@ -504,21 +339,6 @@ const PortfolioPanicGame = () => {
           setPaused={setPaused}
           currentNews={currentNews}
           setCurrentNews={setCurrentNews}
-          showNewsPopup={showNewsPopup}
-          setShowNewsPopup={setShowNewsPopup}
-          newsPopup={newsPopup}
-          setNewsPopup={setNewsPopup}
-          showMarketAlert={showMarketAlert}
-          setShowMarketAlert={setShowMarketAlert}
-          marketAlert={marketAlert}
-          setMarketAlert={setMarketAlert}
-          selectedTab={selectedTab}
-          setSelectedTab={setSelectedTab}
-          notifications={notifications}
-          addNotification={addNotification}
-          handleTrade={handleTrade}
-          calculatePortfolioValue={calculatePortfolioValue}
-          formatCurrency={formatCurrency}
           gameStats={gameStats}
           setGameStats={setGameStats}
           difficulty={difficulty}
@@ -528,6 +348,7 @@ const PortfolioPanicGame = () => {
           setGameScreen={setGameScreen}
           achievements={achievements}
           checkAchievements={checkAchievements}
+          addNotification={addNotification}
         />
       )}
       

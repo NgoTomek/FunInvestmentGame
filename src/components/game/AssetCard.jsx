@@ -1,133 +1,179 @@
-import React from 'react';
-import { ArrowUp, ArrowDown, Info } from 'lucide-react';
-import TrendIndicator from '../ui/TrendIndicator';
-import Button from '../ui/Button';
+import React, { useState } from 'react';
+import { TrendingUp, AlertCircle } from 'lucide-react';
 
 const AssetCard = ({ 
   asset, 
   price, 
-  quantity, 
-  trend, 
+  value,
+  trend,
   priceHistory, 
-  openTradeModal,
-  formatCurrency
+  handleQuickTrade,
+  formatCurrency,
+  cash
 }) => {
-  // Render mini chart
-  const renderMiniChart = () => {
-    const history = priceHistory.slice(-5);
-    const max = Math.max(...history);
-    const min = Math.min(...history);
-    const range = max - min || 1;
-    
-    return (
-      <div className="flex items-end h-6 space-x-1">
-        {history.map((price, i) => {
-          const height = ((price - min) / range) * 100;
-          const color = i === history.length - 1 
-            ? (price >= history[i-1] ? 'bg-green-500' : 'bg-red-500')
-            : (price >= (history[i-1] || price) ? 'bg-green-300' : 'bg-red-300');
-          
-          return (
-            <div 
-              key={i} 
-              className={`w-1 ${color}`} 
-              style={{ height: `${Math.max(10, height)}%` }}
-            ></div>
-          );
-        })}
-      </div>
-    );
-  };
+  const [showQuickActions, setShowQuickActions] = useState(false);
   
   // Get asset-specific details
   const getAssetDetails = () => {
     switch(asset) {
       case 'stocks':
         return {
-          name: 'STOCKS',
-          description: 'Moderate risk, moderate returns',
-          color: 'blue'
+          name: 'Tech Stock',
+          color: 'blue',
+          chartColor: '#4ade80'
+        };
+      case 'oil':
+        return {
+          name: 'Oil',
+          color: 'black',
+          chartColor: '#4ade80'
         };
       case 'gold':
         return {
-          name: 'GOLD',
-          description: 'Safe haven asset',
-          color: 'yellow'
+          name: 'Gold',
+          color: 'yellow',
+          chartColor: '#4ade80'
         };
       case 'crypto':
         return {
-          name: 'CRYPTO',
-          description: 'High risk, high potential returns',
-          color: 'purple'
-        };
-      case 'bonds':
-        return {
-          name: 'BONDS',
-          description: 'Low risk, stable returns',
-          color: 'green'
+          name: 'Crypto',
+          color: 'purple',
+          chartColor: '#4ade80'
         };
       default:
         return {
           name: asset.toUpperCase(),
-          description: '',
-          color: 'gray'
+          color: 'gray',
+          chartColor: '#4ade80'
         };
     }
   };
   
   const details = getAssetDetails();
   
+  // Render mini chart
+  const renderMiniChart = () => {
+    const history = priceHistory.slice(-7);
+    const max = Math.max(...history);
+    const min = Math.min(...history);
+    const range = max - min || 1;
+    
+    // Calculate points for SVG polyline
+    const width = 180;
+    const height = 40;
+    const points = history.map((price, i) => {
+      const x = (i / (history.length - 1)) * width;
+      const y = height - ((price - min) / range) * height;
+      return `${x},${y}`;
+    }).join(' ');
+    
+    return (
+      <div className="w-full h-12 mt-1 mb-3">
+        <svg width="100%" height="100%" viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+          <polyline
+            points={points}
+            fill="none"
+            stroke={details.chartColor}
+            strokeWidth="2"
+          />
+        </svg>
+      </div>
+    );
+  };
+  
+  // Handle quick trade actions
+  const handleAction = (action, amount) => {
+    // Close the quick actions menu
+    setShowQuickActions(false);
+    
+    // Execute the quick trade
+    handleQuickTrade(asset, action, amount);
+  };
+  
   return (
-    <div className="bg-gray-800 text-white p-4 rounded-lg relative">
-      {/* Asset Info Button */}
-      <button 
-        className="absolute top-2 right-2 text-gray-400 hover:text-white"
-        aria-label={`${asset} information`}
-      >
-        <Info size={16} />
-      </button>
+    <div className="bg-gray-900 text-white p-4 rounded-lg relative">
+      {/* Asset Title */}
+      <h3 className="text-xl font-bold mb-1">{details.name}</h3>
       
-      {/* Header with trend */}
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-2xl font-bold">{details.name}</h3>
-        <TrendIndicator trend={trend} />
-      </div>
-      
-      {/* Price and Quantity */}
-      <div className="flex justify-between items-center mb-2">
-        <div>
-          <p className="text-4xl font-bold">${price}</p>
-          <p className="text-xs text-gray-400">{details.description}</p>
-        </div>
-        <div className="text-xs">
-          <div>Owned: {asset === 'crypto' ? quantity.toFixed(2) : quantity}</div>
-          <div>Value: {formatCurrency(quantity * price)}</div>
-        </div>
-      </div>
-      
-      {/* Mini Chart */}
+      {/* Price Chart */}
       {renderMiniChart()}
       
+      {/* Price */}
+      <div className="text-3xl font-bold mb-3">${Number(price).toLocaleString()}</div>
+      
       {/* Trade Actions */}
-      <div className="grid grid-cols-3 gap-2 mt-4">
-        <Button 
-          onClick={() => openTradeModal(asset, 'buy')}
-          color="green"
-          label="BUY"
-        />
-        <Button 
-          onClick={() => openTradeModal(asset, 'sell')}
-          color="red"
-          label="SELL"
-          disabled={quantity <= 0}
-        />
-        <Button 
-          onClick={() => openTradeModal(asset, 'hold')}
-          color="blue"
-          label="HOLD"
-          tooltip="Set a strategy for automatic trades"
-        />
+      <div className="grid grid-cols-2 gap-2">
+        <button 
+          onClick={() => handleAction('buy', 0.25)}
+          className="bg-blue-700 hover:bg-blue-600 text-white py-2 rounded-lg font-bold text-center"
+        >
+          BUY
+        </button>
+        <button 
+          onClick={() => setShowQuickActions(prev => !prev)}
+          className="bg-blue-700 hover:bg-blue-600 text-white py-2 rounded-lg font-bold text-center"
+        >
+          SELL
+        </button>
       </div>
+      
+      {/* Quick Action Menu */}
+      {showQuickActions && (
+        <div className="absolute left-0 right-0 bottom-full mb-2 bg-gray-800 rounded-lg p-2 z-10 shadow-lg">
+          <div className="grid grid-cols-2 gap-2 mb-2">
+            <button 
+              onClick={() => handleAction('buy', 0.25)}
+              className="bg-green-700 hover:bg-green-600 text-white py-1 px-2 rounded-lg text-sm"
+            >
+              Buy 25%
+            </button>
+            <button 
+              onClick={() => handleAction('buy', 0.5)}
+              className="bg-green-700 hover:bg-green-600 text-white py-1 px-2 rounded-lg text-sm"
+            >
+              Buy 50%
+            </button>
+            <button 
+              onClick={() => handleAction('buy', 1)}
+              className="bg-green-700 hover:bg-green-600 text-white py-1 px-2 rounded-lg text-sm"
+            >
+              Buy 100%
+            </button>
+            <button 
+              onClick={() => handleAction('buy', 'double')}
+              className="bg-orange-600 hover:bg-orange-500 text-white py-1 px-2 rounded-lg text-sm"
+            >
+              Double Down
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <button 
+              onClick={() => handleAction('sell', 0.5)}
+              className="bg-red-700 hover:bg-red-600 text-white py-1 px-2 rounded-lg text-sm"
+            >
+              Sell 50%
+            </button>
+            <button 
+              onClick={() => handleAction('sell', 1)}
+              className="bg-red-700 hover:bg-red-600 text-white py-1 px-2 rounded-lg text-sm"
+            >
+              Sell All
+            </button>
+            <button 
+              onClick={() => handleAction('short', 0.25)}
+              className="bg-purple-700 hover:bg-purple-600 text-white py-1 px-2 rounded-lg text-sm"
+            >
+              Short 25%
+            </button>
+            <button
+              onClick={() => setShowQuickActions(false)}
+              className="bg-gray-600 hover:bg-gray-500 text-white py-1 px-2 rounded-lg text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
