@@ -59,8 +59,8 @@ const PortfolioPanicGame = () => {
   
   // News system
   const [currentNews, setCurrentNews] = useState({
-    message: "SEC cracks down on crypto exchanges",
-    impact: { stocks: 1.01, oil: 1.0, gold: 1.03, crypto: 0.75 }
+    message: "Market news will appear here...",
+    impact: { stocks: 1.0, oil: 1.0, gold: 1.0, crypto: 1.0 }
   });
   
   // User settings
@@ -103,7 +103,7 @@ const PortfolioPanicGame = () => {
     perfectTiming: { unlocked: false, title: "Perfect Timing", description: "Buy right before a price spike" }
   });
   
-  // Notifications
+  // Notifications array to pass to GameScreen
   const [notifications, setNotifications] = useState([]);
   
   // Load saved game state on initial render
@@ -181,6 +181,9 @@ const PortfolioPanicGame = () => {
       biggestLoss: 0,
       marketCrashesWeathered: 0
     });
+    
+    // Clear notifications
+    setNotifications([]);
   };
   
   // Add notification
@@ -197,6 +200,11 @@ const PortfolioPanicGame = () => {
   // Check for achievements
   const checkAchievements = () => {
     const portfolioValue = calculatePortfolioValue(portfolio, assetData, assetPrices);
+    
+    // Check for first profitable trade
+    if (gameStats.profitableTrades > 0 && !achievements.firstProfit.unlocked) {
+      unlockAchievement('firstProfit');
+    }
     
     // Check for diversified portfolio
     const hasAllAssets = Object.values(assetData.quantities).every(qty => qty > 0);
@@ -218,6 +226,20 @@ const PortfolioPanicGame = () => {
     // Check for wealthy investor
     if (portfolioValue >= 15000 && !achievements.wealthyInvestor.unlocked) {
       unlockAchievement('wealthyInvestor');
+    }
+    
+    // Check for short master
+    const hasActiveProfitableShort = Object.entries(assetData.shorts).some(([asset, position]) => {
+      if (position.active) {
+        const entryPrice = position.price;
+        const currentPrice = assetPrices[asset];
+        return entryPrice > currentPrice; // Profitable if price decreased
+      }
+      return false;
+    });
+    
+    if (hasActiveProfitableShort && !achievements.shortMaster.unlocked) {
+      unlockAchievement('shortMaster');
     }
   };
   
@@ -309,7 +331,7 @@ const PortfolioPanicGame = () => {
   
   // Render the appropriate screen based on gameScreen state
   return (
-    <div className={`app-container ${settings.darkMode ? 'dark-theme' : 'light-theme'}`}>
+    <div className={`app-container min-h-screen ${settings.darkMode ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-900'}`}>
       {gameScreen === 'menu' && (
         <MainMenu 
           startGame={startGame}
