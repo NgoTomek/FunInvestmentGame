@@ -1,11 +1,16 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { TrendingUp, TrendingDown, Award, Share2, Home, RotateCcw, DollarSign, Medal, ChevronUp, ChevronDown, Activity } from 'lucide-react';
+import { useGame } from '../../context/GameContext';
 
-const ResultsScreen = ({ gameResult, gameStats, setGameScreen, startGame }) => {
-  // Format currency display
-  const formatCurrency = (value) => {
-    return '$' + Math.round(value).toLocaleString();
-  };
+const ResultsScreen = () => {
+  const navigate = useNavigate();
+  const { 
+    gameResult, 
+    gameStats, 
+    startGame, 
+    formatCurrency
+  } = useGame();
   
   // Get performance rating based on return percentage
   const getPerformanceRating = () => {
@@ -34,6 +39,11 @@ const ResultsScreen = ({ gameResult, gameStats, setGameScreen, startGame }) => {
     } else {
       return "Tough market conditions got the better of you this time. Study the asset information and try a more defensive strategy next time.";
     }
+  };
+  
+  const handlePlayAgain = () => {
+    startGame();
+    navigate('/game');
   };
   
   return (
@@ -91,7 +101,7 @@ const ResultsScreen = ({ gameResult, gameStats, setGameScreen, startGame }) => {
               Best Performing Asset
             </h4>
             <p className="text-xl font-bold capitalize">{gameResult.bestAsset}</p>
-            {gameResult.bestReturn && (
+            {gameResult.bestReturn > 0 && (
               <p className="text-green-500 font-bold flex items-center">
                 <TrendingUp size={16} className="mr-1" />
                 +{gameResult.bestReturn.toFixed(1)}%
@@ -105,7 +115,7 @@ const ResultsScreen = ({ gameResult, gameStats, setGameScreen, startGame }) => {
               Worst Performing Asset
             </h4>
             <p className="text-xl font-bold capitalize">{gameResult.worstAsset}</p>
-            {gameResult.worstReturn && (
+            {gameResult.worstReturn < 0 && (
               <p className="text-red-500 font-bold flex items-center">
                 <TrendingDown size={16} className="mr-1" />
                 {gameResult.worstReturn.toFixed(1)}%
@@ -152,17 +162,14 @@ const ResultsScreen = ({ gameResult, gameStats, setGameScreen, startGame }) => {
         {/* Actions */}
         <div className="grid grid-cols-2 gap-4">
           <button 
-            onClick={() => setGameScreen('menu')}
+            onClick={() => navigate('/')}
             className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-3 px-8 rounded-lg font-bold hover:from-blue-500 hover:to-blue-700 transition transform hover:-translate-y-1 flex items-center justify-center shadow-md"
           >
             <Home size={18} className="mr-2" />
             MAIN MENU
           </button>
           <button 
-            onClick={() => {
-              setGameScreen('game');
-              startGame();
-            }}
+            onClick={handlePlayAgain}
             className="bg-gradient-to-r from-green-600 to-green-800 text-white py-3 px-8 rounded-lg font-bold hover:from-green-500 hover:to-green-700 transition transform hover:-translate-y-1 flex items-center justify-center shadow-md"
           >
             <RotateCcw size={18} className="mr-2" />
