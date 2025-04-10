@@ -1,15 +1,44 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Settings, Award, HelpCircle, Info, Play, Cpu, BookOpen, AlertTriangle } from 'lucide-react';
+import { useGame } from '../../context/GameContext';
 
-const MainMenu = ({ 
-  startGame, 
-  setGameScreen, 
-  gameMode, 
-  setGameMode, 
-  difficulty, 
-  setDifficulty,
-  gameModeSettings
-}) => {
+const MainMenu = () => {
+  const navigate = useNavigate();
+  const { 
+    gameMode, 
+    setGameMode, 
+    difficulty, 
+    setDifficulty, 
+    startGame,
+    setGameScreen
+  } = useGame();
+  
+  const gameModeSettings = {
+    standard: {
+      name: "Standard Mode",
+      description: "React to market news and build your portfolio"
+    },
+    crisis: {
+      name: "Financial Crisis",
+      description: "Survive a financial meltdown and try to keep your investments safe"
+    },
+    challenge: {
+      name: "Bull Run Challenge",
+      description: "Maximize returns during a strong bull market with extreme volatility"
+    }
+  };
+
+  const handleStartGame = () => {
+    startGame();
+    navigate('/game');
+  };
+
+  const navigateTo = (screen) => {
+    setGameScreen(screen);
+    navigate(`/${screen}`);
+  };
+  
   return (
     <div className="h-screen flex flex-col items-center justify-center bg-gradient-to-b from-teal-600 to-teal-800 p-4">
       {/* Game Logo/Title */}
@@ -27,7 +56,7 @@ const MainMenu = ({
       {/* Main Action Buttons */}
       <div className="flex flex-col space-y-4 w-full max-w-md mb-8">
         <button 
-          onClick={startGame}
+          onClick={handleStartGame}
           className="bg-gradient-to-r from-green-600 to-green-800 text-white py-6 px-8 rounded-lg text-3xl font-bold hover:from-green-500 hover:to-green-700 transform transition hover:-translate-y-1 shadow-lg flex items-center justify-center"
         >
           <Play size={28} className="mr-3" />
@@ -36,7 +65,7 @@ const MainMenu = ({
         
         <div className="grid grid-cols-2 gap-3">
           <button 
-            onClick={() => setGameScreen('instructions')}
+            onClick={() => navigateTo('instructions')}
             className="bg-gradient-to-r from-blue-600 to-blue-800 text-white py-4 px-8 rounded-lg text-xl font-bold hover:from-blue-500 hover:to-blue-700 transform transition hover:-translate-y-1 shadow-lg flex items-center justify-center"
           >
             <BookOpen size={20} className="mr-2" />
@@ -44,11 +73,11 @@ const MainMenu = ({
           </button>
           
           <button 
-            onClick={() => setGameScreen('assetInfo')}
+            onClick={() => navigateTo('settings')}
             className="bg-gradient-to-r from-purple-600 to-purple-800 text-white py-4 px-8 rounded-lg text-xl font-bold hover:from-purple-500 hover:to-purple-700 transform transition hover:-translate-y-1 shadow-lg flex items-center justify-center"
           >
             <Info size={20} className="mr-2" />
-            ASSET INFO
+            SETTINGS
           </button>
         </div>
       </div>
@@ -97,14 +126,14 @@ const MainMenu = ({
       {/* Bottom Menu Icons */}
       <div className="flex space-x-4">
         <button 
-          onClick={() => setGameScreen('settings')}
+          onClick={() => navigateTo('settings')}
           className="bg-gray-700 text-white p-3 rounded-lg hover:bg-gray-600 transition shadow hover:shadow-lg"
           aria-label="Settings"
         >
           <Settings size={24} />
         </button>
         <button 
-          onClick={() => setGameScreen('achievements')}
+          onClick={() => navigateTo('achievements')}
           className="bg-gray-700 text-white p-3 rounded-lg hover:bg-gray-600 transition shadow hover:shadow-lg"
           aria-label="Achievements"
         >
