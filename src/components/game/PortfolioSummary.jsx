@@ -17,13 +17,16 @@ const PortfolioSummary = ({
   const calculateAllocation = () => {
     const totalValue = calculatePortfolioValue();
     
-    return {
-      cash: (portfolio.cash / totalValue) * 100,
-      stocks: (assetQuantities.stocks * assetPrices.stocks / totalValue) * 100,
-      gold: (assetQuantities.gold * assetPrices.gold / totalValue) * 100,
-      crypto: (assetQuantities.crypto * assetPrices.crypto / totalValue) * 100,
-      bonds: (assetQuantities.bonds * assetPrices.bonds / totalValue) * 100
+    const allocation = {
+      cash: (portfolio.cash / totalValue) * 100
     };
+    
+    // Add allocations for each asset
+    Object.entries(assetQuantities).forEach(([asset, quantity]) => {
+      allocation[asset] = (quantity * assetPrices[asset] / totalValue) * 100;
+    });
+    
+    return allocation;
   };
   
   const allocation = calculateAllocation();
@@ -33,6 +36,7 @@ const PortfolioSummary = ({
     switch(asset) {
       case 'cash': return 'bg-gray-400';
       case 'stocks': return 'bg-blue-500';
+      case 'oil': return 'bg-black';
       case 'gold': return 'bg-yellow-500';
       case 'crypto': return 'bg-purple-500';
       case 'bonds': return 'bg-green-500';
